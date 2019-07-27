@@ -1,0 +1,3 @@
+/etc/pi-watering-bot/conf.d
+/var/log/pi-watering-bot
+/var/lib/pi-watering-bot

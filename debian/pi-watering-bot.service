@@ -1,0 +1,18 @@
+[Unit]
+Description=pi-watering-bot Service
+After=local-fs.target network.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+Restart=on-failure
+User=root
+Group=root
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=pi-watering-bot
+
+ExecStart=/opt/pi-watering-bot/bin/python -m pi_watering_bot
+ExecReload=/bin/kill -s HUP $MAINPID

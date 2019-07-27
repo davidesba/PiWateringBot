@@ -1,0 +1,7 @@
+apscheduler
+attrs
+confight
+mysql.connector
+python-telegram-bot==12.0.0b1
+RPi.GPIO
+SQLAlchemy

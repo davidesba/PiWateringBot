@@ -1,0 +1,9 @@
+[bot]
+    bot-key = "<Put your bot key here>"
+
+[allowed-user-ids]
+    main-user = "<Put your user id here>"
+
+[hardware]
+    pump-pin = 1
+    sensor-pin = 1
