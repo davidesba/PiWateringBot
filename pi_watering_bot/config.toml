@@ -5,5 +5,12 @@
     main-user = "<Put your user id here>"
 
 [hardware]
+    # BCM PINOUT
     pump-pin = 1
-    sensor-pin = 1
+    threshold = 1.0
+
+    [hardware.sensors]
+    # type can be pin or adc
+    #    [hardware.sensors.sensor1]
+    #        type = "adc"
+    #        pin = 0

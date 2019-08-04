@@ -1,6 +1,8 @@
 from functools import wraps
 
 import attr
+
+import ADS1115
 import confight
 import RPi.GPIO as gpio
 
@@ -21,15 +23,55 @@ def authenticate(f):
 
 
 @attr.s
+class Sensor:
+    name = attr.ib(type=str)
+    pin = attr.ib(type=int)
+
+    @property
+    def value(self) -> float:
+        return 0.0
+
+    @property
+    def wet(self) -> bool:
+        return False
+
+
+@attr.s
+class AdcSensor(Sensor):
+    threshold = attr.ib(type=float)
+
+    @property
+    def value(self) -> float:
+        return ads.readADCSingleEnded(self.pin)
+
+    @property
+    def wet(self) -> bool:
+        return self.value < self.threshold
+
+
+@attr.s
+class PinSensor(Sensor):
+    def __attrs_post_init__(self):
+        gpio.setup(self.pin, gpio.IN)
+
+    @property
+    def value(self) -> float:
+        if gpio.input(self.pin) == gpio.HIGH:
+            return 3.3
+        return 0.0
+
+    @property
+    def wet(self) -> bool:
+        return gpio.input(self.pin) == gpio.HIGH
+
+
+@attr.s
 class WateringMng:
     pump = attr.ib(type=int)
-    sensor = attr.ib(type=int)
 
     def __attrs_post_init__(self):
         gpio.setwarnings(False)
-        gpio.setmode(gpio.BOARD)
         gpio.setup(self.pump, gpio.OUT, initial=gpio.LOW)
-        gpio.setup(self.sensor, gpio.IN)
 
     def water_on(self):
         if not self.pump_on and not self.sensor_on:
@@ -45,7 +87,19 @@ class WateringMng:
 
     @property
     def sensor_on(self) -> bool:
-        return gpio.input(self.sensor) == gpio.HIGH
+        return any(
+            sensor.wet
+            for sensor in sensors
+        )
 
 
 config = confight.load_app('pi-watering-bot')
+sensors = list()
+gpio.setmode(gpio.BCM)
+ads = ADS1115.ADS1115()
+for name, sensor in config['hardware']['sensors'].items():
+    sensors.append(
+        AdcSensor(name, sensor['pin'], sensor['threshold'])
+        if sensor['type'] == 'adc'
+        else PinSensor(name, sensor['pin'])
+    )

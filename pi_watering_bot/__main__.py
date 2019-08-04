@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
-from pi_watering_bot.utils import WateringMng, authenticate, config
+from pi_watering_bot.utils import WateringMng, authenticate, config, sensors
 from telegram import Bot
 from telegram.ext import CommandHandler, Updater
 
@@ -45,19 +45,20 @@ def water_off(update, context):
 
 @authenticate
 def status(update, context):
+    msg = 'Water %s' % ('ON' if mng.pump_on else 'OFF')
+    for sensor in sensors:
+        msg += '\nSensor %s %.1fmV Wet %s' % (
+            sensor.name, sensor.value,
+            'Yes' if sensor.wet else 'No'
+        )
+
     context.bot.send_message(
         chat_id=update.message.chat_id,
-        text='Water %s\nSensor %s' % (
-            'ON' if mng.pump_on else 'OFF',
-            'ON' if mng.sensor_on else 'OFF'
-        )
+        text=msg
     )
 
 
-mng = WateringMng(
-    config['hardware']['pump-pin'],
-    config['hardware']['sensor-pin']
-)
+mng = WateringMng(config['hardware']['pump-pin'])
 scheduler = BackgroundScheduler(
     executors={
         'default': ThreadPoolExecutor(1)
